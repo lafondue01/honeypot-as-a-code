@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/exec"
 	"time"
 	"github.com/joho/godotenv"
 )
@@ -24,8 +25,31 @@ func doClientConnection(connection net.Conn, listener net.Listener) {
 	}
 
     fmt.Println("[" + time.Now().Format(time.RFC822) + "] "+clientIP+": " + string(buffer[:mLen]))
+	haveInformation(clientIP)
 
     listener.Close()
+}
+
+func haveInformation(ip string) {
+    token := os.Getenv("TOKEN_ABUSEIPDP")
+
+    out, err := exec.Command(
+        "curl",
+        "-G",
+        "https://api.abuseipdb.com/api/v2/check",
+        "--data-urlencode", "ipAddress="+ip,
+        "-d", "maxAgeInDays=90",
+        "-d", "verbose",
+        "-H", "Key: "+token,
+        "-H", "Accept: application/json",
+    ).Output()
+
+    if err != nil {
+        fmt.Println("Erreur :", err)
+        return
+    }
+
+    fmt.Println(string(out))
 }
 
 func loadEnv() (string, string, string){
